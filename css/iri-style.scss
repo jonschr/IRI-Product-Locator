@@ -8,6 +8,15 @@
     background-color: rgba( white, 0.9 );
 }
 
+img.loading,
+img.loading-products {
+    height: 44px;
+    width: 44px;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 /* ==========================================================================
    The form
    ========================================================================== */
@@ -52,11 +61,6 @@
 
             @media( max-width: 767px ) {
                 max-width: 100%;
-            }
-
-            .loading {
-                height: 40px;
-                width: 40px;
             }
         }
 

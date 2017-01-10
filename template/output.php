@@ -21,12 +21,12 @@ function iri_form_output( $atts ) {
             <select id="productID" class="locator-form-input product-select" style="display:none;">
                 <option value="0">No Products Found</option>
             </select>
-            <img src="<?php echo dirname( plugin_dir_url( __FILE__ ) ); ?>/images/gps.gif" class="loading-products" alt="loading">
+            <img src="<?php echo dirname( plugin_dir_url( __FILE__ ) ); ?>/images/ripple.svg" class="loading-products" alt="loading">
         </div>
 
         <div class="form-group locator-search">
             <button type="submit" class="button search locations locator-form-input"><?php _e('Search', 'iri-locator'); ?></button>
-            <img src="<?php echo dirname( plugin_dir_url( __FILE__ ) ); ?>/images/gps.gif" class="loading" alt="loading" hidden="">
+            <img src="<?php echo dirname( plugin_dir_url( __FILE__ ) ); ?>/images/ripple.svg" class="loading" alt="loading" hidden="">
         </div>
 
     </form>

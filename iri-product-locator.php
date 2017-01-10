@@ -94,6 +94,12 @@ function locator_main_shortcode( $atts ) {
 
 function iri_output( $atts ) {
 
+    $client_id = $atts[ 'client_id' ];
+    $brand_id = $atts[ 'brand_id' ];
+    $google_maps_api_key = $atts[ 'google_maps_api_key' ];
+    $starting_zip = $atts[ 'starting_zip' ];
+    $map_default_zoom_level = $atts[ 'map_default_zoom_level' ];
+
     ?>
 
             <form id="locator-form" role="form">

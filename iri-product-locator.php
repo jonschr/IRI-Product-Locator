@@ -27,6 +27,12 @@ if ( !defined( 'ABSPATH' ) ) {
 // Plugin directory
 define( 'IRI_LOCATOR', dirname( __FILE__ ) );
 
+//* Include our php output files
+include_once( 'template/inline-scripts.php' );
+
+//* Include our inline scripts
+include_once( 'template/output.php' );
+
 //* Enqueue Scripts and Styles
 add_action( 'wp_enqueue_scripts', 'iri_register_styles_scripts' );
 function iri_register_styles_scripts() {
@@ -69,7 +75,10 @@ function locator_main_shortcode( $atts ) {
 		'client_id' => '103',
         'brand_id' => 'DEMO',
         'starting_zip' => '76708',
-        'map_default_zoom_level' => '8',
+        'map_default_zoom_level' => '10',
+        'all_products_group_to_rename' => 'any_frusion',
+        'contact_url' => '/contact',
+        'search_radius' => '25',
 	), $atts );
 
     //* Variables shown here for readability only; they'll need to be redefined as needed in individual functions
@@ -78,265 +87,28 @@ function locator_main_shortcode( $atts ) {
     $google_maps_api_key = $atts[ 'google_maps_api_key' ];
     $starting_zip = $atts[ 'starting_zip' ];
     $map_default_zoom_level = $atts[ 'map_default_zoom_level' ];
+    $all_products_group_to_rename = $atts[ 'all_products_group_to_rename' ];
+    $contact_url = $atts[ 'contact_url' ];
+    $search_radius = $atts[ 'search_radius' ];
+
+    //* Anything that needs done before everything (perhaps our theme needs to wrap something?)
+    do_action( 'iri_before' );
 
     //* Set up an action for the form
-    do_action( 'iri_form_output', $atts );
+    do_action( 'iri_do_form_output', $atts );
 
     //* Set up an action for the locations list
-    do_action( 'iri_locations_list_output', $atts );
+    do_action( 'iri_do_results_output', $atts );
 
-    //* Set up an action for the map
-    do_action( 'iri_locations_list_output', $atts );
+    //* Anything that needs done after everything
+    do_action( 'iri_after' );
 
     //* Do our main output function (this is temporary and should be removed before use in prod)
-    iri_output( $atts );
+    // iri_output( $atts );
 }
 
-function iri_output( $atts ) {
-
-    $client_id = $atts[ 'client_id' ];
-    $brand_id = $atts[ 'brand_id' ];
-    $google_maps_api_key = $atts[ 'google_maps_api_key' ];
-    $starting_zip = $atts[ 'starting_zip' ];
-    $map_default_zoom_level = $atts[ 'map_default_zoom_level' ];
-
-    ?>
-
-            <form id="locator-form" role="form">
-
-                <div class="form-group">
-                    <label for="postalCode"><?php _e('Zip Code', 'iri-locator'); ?></label>
-                    <span class="error zip required" hidden="">- Please enter a zip code.</span>
-                    <span class="error zip invalid" hidden="">- Please enter a 5-digit zip code.</span>
-                    <input type="text" class="form-control input-xl" id="postalCode" placeholder="<?php _e('Zip Code', 'iri-locator'); ?>" maxlength="5">
-                </div>
-
-                <div class="form-group">
-                    <label for="productID"><?php _e('Select Product', 'iri-locator'); ?></label>
-                    <select id="productID" style="display:none;">
-                        <option value="0">No Products Found</option>
-                    </select>
-                    <img src="<?php echo plugin_dir_url( __FILE__ ); ?>/images/gps.gif" class="loading-products" alt="loading">
-                </div>
-
-                <button type="submit" class="block-link search locations"><?php _e('Search', 'iri-locator'); ?></button>
-                <img src="<?php echo plugin_dir_url( __FILE__ ); ?>/images/gps.gif" class="loading" alt="loading" hidden="">
-
-            </form>
-
-            <div id="locations" hidden="">
-                <h3 id="locationsHeading" hidden=""><?php _e('Find Us at These Locations:', 'iri-locator'); ?></h3>
-                <div id="noLocationsFoundText" hidden=""><h2><?php _e('Sadly, no products by the name of', 'iri-locator'); ?> <span id="productNotFoundName">[PRODUCT NAME]</span> <?php _e('were found within 25 miles of ZIP code', 'iri-locator'); ?> <span id="productNotFoundZip">[XXXXX]</span>.</h2>
-                    <p><?php _e('But don’t lose hope!', 'iri-locator'); ?></p>
-                    <p><?php _e('(1)&nbsp; Request it', 'iri-locator'); ?></p>
-                    <p><?php _e('Tell us what you want and we can use this information to let retailers know what products you’re looking for. Don’t worry, though, we’ll never reveal your name to anyone else — pinky promise.', 'iri-locator'); ?></p>
-                    <p><?php if (strpos($_SERVER["REQUEST_URI"], '/es/') !== false) : ?>
-                            <a href="/es/contact-us"><?php _e('Contact us with your request', 'iri-locator'); ?></a>
-                        <?php else : ?>
-                            <a href="/contact-us"><?php _e('Contact us with your request', 'iri-locator'); ?></a>
-                        <?php endif; ?></p>
-                    <p><?php _e('(2) Search again', 'iri-locator'); ?></p>
-                    <p><?php _e('Maybe you hit the wrong key. Maybe you just like having Déjà vu. Or maybe you’re considering flying across the country to find our products. (Totally worth it, just saying.)', 'iri-locator'); ?></p></div>
-                <div id="geocodeError" hidden=""></div>
-                <div id="locationsList"></div>
-            </div>
-
-            <p>Map is just below this</p>
-            <div id="map-canvas">&nbsp;</div>
-
-        <script src='https://maps.googleapis.com/maps/api/js?key=<?php echo $google_maps_api_key; ?>&extension=.js'></script>
-        <script>
-            var ajaxurl = "<?php echo admin_url( 'admin-ajax.php' ); ?>";
-
-            jQuery( document ).ready(function($) {
-
-                google.maps.event.addDomListener(window, 'load', init);
-                var map;
-                var markers = [];
-                function init() {
-
-                    //jQuery.getJSON('https://maps.googleapis.com/maps/api/geocode/json?address=' + $('#postalCode').val() + '&key=<?php // echo $google_maps_api_key; ?> ', null, function (zipData) {
-                    jQuery.getJSON('https://maps.googleapis.com/maps/api/geocode/json?address=75215&key=<?php echo $google_maps_api_key; ?>', null, function (zipData) {
-                        var p = zipData.results[0].geometry.location;
-                        var centerMap = new google.maps.LatLng(p.lat, p.lng);
-                        // var MY_MAPTYPE_ID = 'LALA Foods Product Locator';
-
-                        var mapOptions = {
-                            center: centerMap,
-                            zoom: 8,
-                            zoomControl: true,
-                            zoomControlOptions: {
-                                style: google.maps.ZoomControlStyle.SMALL,
-                            },
-                            disableDoubleClickZoom: true,
-                            mapTypeControl: false,
-                            scaleControl: true,
-                            scrollwheel: true,
-                            panControl: true,
-                            streetViewControl: true,
-                            draggable : true,
-                            overviewMapControl: true,
-                            overviewMapControlOptions: {
-                                opened: false,
-                            },
-                            mapTypeId: google.maps.MapTypeId.ROADMAP,
-                        }
-                        var mapElement = document.getElementById('map-canvas');
-                        map = new google.maps.Map(mapElement, mapOptions);
-                    });
-                }
-
-
-
-                $.getJSON( ajaxurl,
-                    {
-                      action: 'get_product_list',
-                    },
-                    function( data ) {
-                        var items = '';
-                        $.each( data, function( key, val ) {
-                            /*for(var upcCode in val) {
-                             console.log(upcCode);
-                             }*/
-                            // console.log(key + ' ' + val);
-                            $.each( val, function (upcCode, upcName) {
-                                //console.log("key: " + upcCode + " value: " + upcName );
-                                items += '<option value="' + upcCode + '">' + upcName + '</option>';
-                            });
-
-                        });
-
-                        $('#productID').html(items).show().change();
-
-                        // For testing
-                        // $('#productID').html( '<option value="1000030001">Maria\'s Fudge 4 oz</option><option value="upcCode2">upcName2</option><option value="upcCode3">upcName3</option>' ).show().change();
-
-                        $('.loading-products').hide();
-                });
-
-                $('#productID').on('change', function () {
-                   if ($(this).val().indexOf('GROUP') != -1)
-                       $(this).addClass('group-selected');
-                    else
-                       $(this).removeClass('group-selected');
-                });
-
-
-                $('#locator-form').on("submit", function(e) {
-                    e.preventDefault();
-                    $('.search.locations').hide().next('.loading').removeAttr('hidden');
-                    // _gaq.push(['_trackEvent', 'Find a location', 'Click', 'Where to buy']);
-
-                    $('#locationsList').empty();
-                    var postalCode = $('#postalCode').val();
-                    var upc = $('#productID').val();
-
-                    markers.forEach(function (marker) {
-                        marker.setMap(null);
-                    });
-                    markers = [];
-
-                    $.getJSON( '<?php echo plugin_dir_url( __FILE__ ); ?>/locator-service.php?location=1&brandid=FRUS&upc=' + $('#productID').val() + "&zip=" + $('#postalCode').val(), function( data ) {
-                        console.log(data);
-                        if(data != "No Stores") {
-                            var points = new Array();
-
-                            //console.log(data);
-                            $.each( data, function (key, val){
-                                if (key == 'STORES') {
-                                    $.each(val, function(index, element){
-                                        if(index == 'STORE') {
-                                            $.each(element, function(store, attr){
-                                                $('<p><h4>' + attr['NAME'] + ' ' + attr['DISTANCE'] + ' miles' + '</h4>' + attr['ADDRESS'] + '<br>' + attr['CITY'] + ', ' + attr['STATE'] + '  ' + attr['ZIP'] + '<br>' + attr['PHONE'] + '</p>').appendTo('#locationsList');
-                                                var point = [attr['NAME'], attr['ADDRESS'], attr['CITY'] + ', ' + attr['STATE'] + ' ' + attr['ZIP'], attr['DISTANCE'] + ' miles', attr['PHONE'], attr['LATITUDE'], attr['LONGITUDE']];
-                                                points.push(point);
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-
-                            jQuery.getJSON('https://maps.googleapis.com/maps/api/geocode/json?address=' + $('#postalCode').val() + '&key=<?php echo $google_maps_api_key; ?> ', null, function (zipData) {
-                                //console.log(zipData);
-                                var p = zipData.results[0].geometry.location;
-                                //var centerMap = new google.maps.LatLng(p.lat, p.lng);
-
-                                newLocation(p.lat, p.lng);
-
-                                function newLocation(newLat, newLng) {
-                                    map.setCenter({
-                                        lat: newLat,
-                                        lng: newLng
-                                    });
-                                    //console.log(points);
-                                    var locations = points;
-                                    for (i = 0; i < locations.length; i++) {
-                                        if (locations[i][0] =='undefined'){ storeName ='';} else { storeName = locations[i][0];}
-                                        if (locations[i][1] =='undefined'){ storeAddress ='';} else { storeAddress = locations[i][1];}
-                                        if (locations[i][2] =='undefined'){ storeCity ='';} else { storeCity = locations[i][2];}
-                                        if (locations[i][3] =='undefined'){ storeDistance ='';} else { storeDistance = locations[i][3];}
-                                        if (locations[i][4] =='undefined'){ storePhone ='';} else { storePhone = locations[i][4];}
-                                        //var newGoogleTest = new google.maps.LatLng(locations[i][5], locations[i][6]);
-                                        console.log(locations[i][5]);
-                                        marker = new google.maps.Marker({
-                                            position: new google.maps.LatLng(locations[i][5], locations[i][6]),
-                                            map: map,
-                                            title: 'Store Information',
-                                            desc: storeName,
-                                            addr: storeAddress,
-                                            city: storeCity,
-                                            distance: storeDistance,
-                                            phone: storePhone
-                                        });
-                                        bindInfoWindow(marker, map, storeName, storeAddress, storeCity, storeDistance, storePhone);
-                                        markers.push(marker);
-                                    }
-                                    function bindInfoWindow(marker, map, storeName, storeAddress, storeCity, storeDistance, storePhone) {
-                                        var infoWindowVisible = (function () {
-                                            var currentlyVisible = false;
-                                            return function (visible) {
-                                                if (visible !== undefined) {
-                                                    currentlyVisible = visible;
-                                                }
-                                                return currentlyVisible;
-                                            };
-                                        }());
-                                        iw = new google.maps.InfoWindow();
-                                        google.maps.event.addListener(marker, 'click', function() {
-                                            if (infoWindowVisible()) {
-                                                iw.close();
-                                                infoWindowVisible(false);
-                                            } else {
-                                                var html= "<div class='marker-info'><h4>"+storeName+"</h4><p>"+storeAddress+"<br>"+storeCity+"<br>"+storePhone+"<p><p>"+storeDistance+"<p></div>";
-                                                iw = new google.maps.InfoWindow({content:html});
-                                                iw.open(map,marker);
-                                                infoWindowVisible(true);
-                                            }
-                                        });
-                                        google.maps.event.addListener(iw, 'closeclick', function () {
-                                            infoWindowVisible(false);
-                                        });
-                                    }
-                                }
-                            });
-                            $('#noLocationsFoundText').attr('hidden', '');
-                            $('#locations').removeAttr('hidden');
-                            $('#locationsHeading').removeAttr('hidden');
-                        } else {
-                            //Remove markers  on reload
-                            //marker.setMap(null);
-                            //marker.setVisible(false);
-                            $('#productNotFoundName').text($("#productID option:selected").text());
-                            $('#productNotFoundZip').text($("#postalCode").val());
-                            console.log("No locations found");
-                            $('#locations, #noLocationsFoundText').removeAttr('hidden');
-                            $('#locationsHeading').attr('hidden', '');
-                        }
-
-                        $('.search.locations').show().next('.loading').attr('hidden', '');
-                    });
-                });
-            });
-        </script>
-        <?php
-}
+//* Set up our default output. We're setting up actions so that components can be easily switched out if needed.
+add_action( 'iri_do_form_output', 'iri_form_output', 15 );
+add_action( 'iri_do_results_output', 'iri_map_output', 15 );
+add_action( 'iri_do_results_output', 'iri_locations_output', 20 );
+add_action( 'iri_do_results_output', 'iri_inline_scripts', 25 );

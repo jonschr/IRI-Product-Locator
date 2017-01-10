@@ -1,8 +1,192 @@
 /* ==========================================================================
+   The form
+   ========================================================================== */
+
+.locator-form {
+    display: flex;
+    margin-bottom: 7px;
+
+    @media( max-width: 767px ) {
+        flex-direction: column;
+    }
+
+    .form-group {
+        flex: 0 1 auto;
+        width: 100%;
+
+        @media( max-width: 767px ) {
+            padding: 0 0 5px;
+        }
+
+        &.zipcode {
+            max-width: 100px;
+
+            input.locator-form-input {
+                text-align: center;
+            }
+
+            @media( max-width: 767px ) {
+                max-width: 100%;
+
+                input.locator-form-input {
+                    text-align: left;
+                }
+            }
+        }
+
+        &.locator-search {
+            max-width: 100px;
+            min-width: 100px;
+            text-align: center;
+
+            @media( max-width: 767px ) {
+                max-width: 100%;
+            }
+
+            .loading {
+                height: 40px;
+                width: 40px;
+            }
+        }
+
+        &.product-selection {
+            @media( min-width: 767px ) {
+                margin-left: 7px;
+                margin-right: 7px;
+            }
+
+            select.locator-form-input {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+        }
+
+        .locator-form-input {
+            padding: 10px;
+            height: 50px;
+            width: 100%;
+        }
+
+
+    }
+}
+
+/* ==========================================================================
+   Locations list
+   ========================================================================== */
+
+.locations-list {
+    line-height: 1.2em;
+    padding: 2px;
+    display: flex;
+    align-items: stretch;
+    align-content: stretch;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    background-color: rgba( black, 0.05 );
+
+    .location {
+        box-sizing: border-box;
+        margin: 2px;
+        padding: 7px 0;
+        flex: 1;
+        min-width: 300px;
+        text-align: center;
+        background-color: white;
+
+        //* Only display the first four on mobile
+        @media( max-width: 767px ) {
+            display: none;
+
+            &:nth-of-type(1),
+            &:nth-of-type(2),
+            &:nth-of-type(3),
+            &:nth-of-type(4) {
+                display: block;
+            }
+        }
+
+        h4.location-title {
+            font-weight: bold;
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: 18px;
+            margin: 0;
+            padding: 0;
+
+
+        }
+
+        span.distance {
+            display: block;
+            opacity: 0.5;
+            font-size: 12px;
+            text-transform: uppercase;
+            line-height: 1.2em;
+            font-weight: bold;
+        }
+
+        p {
+            margin-bottom: 0;
+            line-height: 1.2em;
+            font-size: 15px;
+
+            span {
+                display: block;
+                text-transform: uppercase;
+                padding: 0;
+                margin: 0;
+                opacity: 0.7;
+            }
+        }
+    }
+}
+
+#noLocationsFoundText {
+    padding: 10px 0;
+
+    p {
+        margin: 0;
+        padding: 0;
+    }
+}
+
+
+/* ==========================================================================
    The map
    ========================================================================== */
 
 #map-canvas {
-    height: 500px;
+    min-height: 350px;
     width: 100%;
+
+    .marker-info {
+        h4 {
+            margin: 0 0 5px;
+            padding: 0;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        p {
+            margin-bottom: 0;
+            font-size: 13px;
+            line-height: 1.3em;
+            text-transform: uppercase;
+
+            span {
+                display: block;
+                margin: 0;
+                padding: 0;
+                opacity: 0.7;
+            }
+
+            span.distance {
+                opacity: 1;
+                font-size: 12px;
+                font-weight: bold;
+                margin-top: 5px;
+            }
+        }
+    }
 }

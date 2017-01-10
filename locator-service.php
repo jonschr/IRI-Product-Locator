@@ -24,27 +24,47 @@ if ( '' != $products ) {
 
 	$xml = new SimpleXMLElement($xmlString);
 
+    $number_of_groups = count( $xml );
+    $count_groups = 1;
+
 	// add groups
 	$groupArray = array();
+
 	foreach ($xml as $group) {
-		$groupArray[strval($group->group_id)] = '{"GROUP_' . $group->group_id . '": "' . $group->group_name . '"}';
+        if ( $number_of_groups != 1 )
+            $groupArray[strval($group->group_id)] = '{"GROUP_' . $group->group_id . '": "' . $group->group_name . '"}';
+
+        if ( ( $number_of_groups == $count_groups ) && ( $number_of_groups == 1 ) )
+            $groupArray[strval($group->group_id)] = '{"GROUP_' . $group->group_id . '": "All Products"}';
+
+        $count_groups++;
 	}
+
+    //* If there's just one group, we'll use it, if more than one, then we skip the first group (the 'all products' group)
 
 	$prodArray = array();
 	foreach ($groupArray as $group_id => $group) {
 		$prodArray[$group_id] = $group;
 
-
 		// if ($group_id == 'any_frusion')
-		// 	continue; // don't need to add all the products for this group
+        // continue; // don't need to add all the products for this group
+
+        //* Logic to not include the "any" group if there are a bunch of groups (it results in duplicate products)
+		// if ( ( $number_of_groups == $count ) && ( $number_of_groups != 1 ) )
+
 
 		// grab list of products and return it to the screen as json array
 		$xmlString = file_get_contents("http://productlocator.infores.com/productlocator/products/products.pli?client_id=148&brand_id=FRUS&group_id=$group_id");
+
 
 		$xml = new SimpleXMLElement($xmlString);
 
 		// add products
 		foreach ($xml as $products) {
+
+            // if ( ( $number_of_groups == $count ) && ( $number_of_groups == 1 ) )
+            //     $products->upc_code = 'All Products';
+
 			$prodArray[$group_id . strval($products->upc_code)] = '{"' . $products->upc_code . '": "' . $products->upc_name . '"}';
 		}
 	}

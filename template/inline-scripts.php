@@ -9,6 +9,8 @@ function iri_inline_scripts( $atts ) {
     $starting_zip = $atts[ 'starting_zip' ];
     $map_default_zoom_level = $atts[ 'map_default_zoom_level' ];
     $all_products_group_to_rename = $atts[ 'all_products_group_to_rename' ];
+    $contact_url = $atts[ 'contact_url' ];
+    $radius = $atts[ 'search_radius' ];
 
     ?>
 
@@ -103,7 +105,7 @@ function iri_inline_scripts( $atts ) {
                 });
                 markers = [];
 
-                $.getJSON( '<?php echo dirname( plugin_dir_url( __FILE__ ) ); ?>/locator-service.php?location=1&brandid=<?php echo $brand_id; ?>&upc=' + $('#productID').val() + "&zip=" + $('#postalCode').val(), function( data ) {
+                $.getJSON( '<?php echo dirname( plugin_dir_url( __FILE__ ) ); ?>/locator-service.php?location=1&brandid=<?php echo $brand_id; ?>&clientid=<?php echo $client_id; ?>&radius=<?php echo $radius; ?>&upc=' + $('#productID').val() + "&zip=" + $('#postalCode').val(), function( data ) {
                     console.log(data);
                     if(data != "No Stores") {
                         var points = new Array();

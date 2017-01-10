@@ -1,26 +1,25 @@
 <?php
-if ( isset( $_SERVER['HTTP_ORIGIN'] ) )
-	header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+
+// if ( isset( $_SERVER['HTTP_ORIGIN'] ) )
+// 	header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
 
 header('Content-type: text/plain');
 
-/**
- * Created by PhpStorm.
- * User: john.macon
- * Date: 2/28/16
- * Time: 2:59 PM
- */
+//* These settings are always the result of queries and are not set directly by any shortcode attributes
 $products = (isset($_REQUEST['products']) && '' != $_REQUEST['products']) ? $_REQUEST['products'] : '';
 $location = (isset($_REQUEST['location']) && '' != $_REQUEST['location']) ? $_REQUEST['location'] : '';
 $postalCode = (isset($_REQUEST['zip']) && '' != $_REQUEST['zip']) ? $_REQUEST['zip'] : '';
 $productID = (isset($_REQUEST['upc']) && '' != $_REQUEST['upc']) ? $_REQUEST['upc'] : '';
-$radius = (isset($_REQUEST['radius']) && '' != $_REQUEST['radius']) ? $_REQUEST['radius'] : '100';
+
+//* These settings can be controlled through the shortcode
+$radius = (isset($_REQUEST['radius']) && '' != $_REQUEST['radius']) ? $_REQUEST['radius'] : '';
 $brand_id = (isset($_REQUEST['brandid']) && '' != $_REQUEST['brandid']) ? $_REQUEST['brandid'] : 'FRUS';
+$client_id = (isset($_REQUEST['clientid']) && '' != $_REQUEST['clientid']) ? $_REQUEST['clientid'] : '148';
 
 if ( '' != $products ) {
 
-	//grab list of groups
-	$xmlString = file_get_contents("http://productlocator.infores.com/productlocator/products/products.pli?client_id=148&brand_id=FRUS&prod_lvl=group");
+	//* Grab the list of groups
+	$xmlString = file_get_contents("http://productlocator.infores.com/productlocator/products/products.pli?client_id=$client_id&brand_id=$brand_id&prod_lvl=group");
 
 	$xml = new SimpleXMLElement($xmlString);
 
@@ -31,9 +30,12 @@ if ( '' != $products ) {
 	$groupArray = array();
 
 	foreach ($xml as $group) {
+
+        //* If we have more than one group, we'll treat this normally
         if ( $number_of_groups != 1 )
             $groupArray[strval($group->group_id)] = '{"GROUP_' . $group->group_id . '": "' . $group->group_name . '"}';
 
+        //* If there's just one, then it's an "all products" group, so let's make it say that
         if ( ( $number_of_groups == $count_groups ) && ( $number_of_groups == 1 ) )
             $groupArray[strval($group->group_id)] = '{"GROUP_' . $group->group_id . '": "All Products"}';
 
@@ -52,9 +54,8 @@ if ( '' != $products ) {
         //* Logic to not include the "any" group if there are a bunch of groups (it results in duplicate products)
 		// if ( ( $number_of_groups == $count ) && ( $number_of_groups != 1 ) )
 
-
 		// grab list of products and return it to the screen as json array
-		$xmlString = file_get_contents("http://productlocator.infores.com/productlocator/products/products.pli?client_id=148&brand_id=FRUS&group_id=$group_id");
+		$xmlString = file_get_contents("http://productlocator.infores.com/productlocator/products/products.pli?client_id=$client_id&brand_id=$brand_id&group_id=$group_id");
 
 
 		$xml = new SimpleXMLElement($xmlString);
@@ -74,7 +75,7 @@ if ( '' != $products ) {
 }
 
 if ( '' != $location ) {
-    // echo 'http://productlocator.infores.com/productlocator/servlet/ProductLocatorEngine?clientid=148&productfamilyid=FRUS&searchradius=' . $radius . '&producttype=upc&productid=' . $productID . '&zip=' . $postalCode;
+    // echo 'http://productlocator.infores.com/productlocator/servlet/ProductLocatorEngine?clientid=$client_id&productfamilyid=$brand_id&searchradius=' . $radius . '&producttype=upc&productid=' . $productID . '&zip=' . $postalCode;
 
 	$is_group = false;
 	if (strpos($productID, 'GROUP_') !== false) {
@@ -82,7 +83,7 @@ if ( '' != $location ) {
 		$productID = str_replace('GROUP_', '', $productID);
 	}
 
-	$svc_url = sprintf("http://productlocator.infores.com/productlocator/servlet/ProductLocatorEngine?clientid=148&productfamilyid=FRUS&searchradius=%s&producttype=%s&productid=%s&zip=%s",
+	$svc_url = sprintf("http://productlocator.infores.com/productlocator/servlet/ProductLocatorEngine?clientid=$client_id&productfamilyid=$brand_id&searchradius=%s&producttype=%s&productid=%s&zip=%s",
 		$radius, $is_group ? 'agg' : 'upc', $productID, $postalCode);
     $productResultslist = file_get_contents($svc_url);
 

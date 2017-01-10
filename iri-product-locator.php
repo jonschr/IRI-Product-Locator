@@ -51,6 +51,9 @@ add_action( 'wp_ajax_get_product_list', 'iri_ajax_product_list' );
 add_action( 'wp_ajax_nopriv_get_product_list', 'iri_ajax_product_list' );
 function iri_ajax_product_list () {
 
+    //* To reset the cache while testing
+    // set_transient( 'product_list', $product_json, 60 );
+
     if ( get_transient( 'product_list' ) ) {
         $product_json = get_transient('product_list');
     } else {
@@ -76,7 +79,6 @@ function locator_main_shortcode( $atts ) {
         'brand_id' => 'DEMO',
         'starting_zip' => '76708',
         'map_default_zoom_level' => '10',
-        'all_products_group_to_rename' => 'any_frusion',
         'contact_url' => '/contact',
         'search_radius' => '25',
 	), $atts );
@@ -87,9 +89,8 @@ function locator_main_shortcode( $atts ) {
     $google_maps_api_key = $atts[ 'google_maps_api_key' ];
     $starting_zip = $atts[ 'starting_zip' ];
     $map_default_zoom_level = $atts[ 'map_default_zoom_level' ];
-    $all_products_group_to_rename = $atts[ 'all_products_group_to_rename' ];
     $contact_url = $atts[ 'contact_url' ];
-    $search_radius = $atts[ 'search_radius' ];
+    $radius = $atts[ 'search_radius' ];
 
     //* Anything that needs done before everything (perhaps our theme needs to wrap something?)
     do_action( 'iri_before' );

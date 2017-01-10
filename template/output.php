@@ -1,5 +1,9 @@
 <?php
 
+function iri_before_wrapper() {
+    echo '<div class="locator-wrap">';
+}
+
 //* Outputs the actual form
 function iri_form_output( $atts ) {
     ?>
@@ -39,9 +43,13 @@ function iri_locations_output( $atts ) {
             <p>Unfortunately, we couldn't find this product within your search area. Please feel free to search again – if you still can't find anything, then please do <a href="<?php echo $contact_url; ?>">contact us</a> directly!</p>
         </div>
         <div id="geocodeError" hidden=""></div>
-        <div id="locationsList" class="locations-list"></div>
+        <?php do_action( 'iri_do_locations_list' ); ?>
     </div>
     <?php
+}
+
+function iri_locations_list() {
+    echo '<div id="locationsList" class="locations-list"></div>';
 }
 
 function iri_map_output( $atts ) {
@@ -54,4 +62,8 @@ function iri_map_output( $atts ) {
 
     //* Output the actual map canvas
     echo '<div id="map-canvas">&nbsp;</div>';
+}
+
+function iri_after_wrapper() {
+    echo '</div>'; // .locator-wrap
 }

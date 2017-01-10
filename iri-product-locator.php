@@ -92,6 +92,8 @@ function locator_main_shortcode( $atts ) {
     $contact_url = $atts[ 'contact_url' ];
     $radius = $atts[ 'search_radius' ];
 
+    ob_start();
+
     //* Anything that needs done before everything (perhaps our theme needs to wrap something?)
     do_action( 'iri_before' );
 
@@ -104,12 +106,22 @@ function locator_main_shortcode( $atts ) {
     //* Anything that needs done after everything
     do_action( 'iri_after' );
 
+    return ob_get_clean();
+
     //* Do our main output function (this is temporary and should be removed before use in prod)
     // iri_output( $atts );
 }
 
 //* Set up our default output. We're setting up actions so that components can be easily switched out if needed.
+add_action( 'iri_before', 'iri_before_wrapper', 15 );
 add_action( 'iri_do_form_output', 'iri_form_output', 15 );
 add_action( 'iri_do_results_output', 'iri_map_output', 15 );
+
+//* This action sets up the locations output as a whole
 add_action( 'iri_do_results_output', 'iri_locations_output', 20 );
+
+//* This action outputs just the list of locations and nothing else (useful if we don't want a list and need to easily remove it)
+add_action( 'iri_do_locations_list', 'iri_locations_list', 15 );
+
 add_action( 'iri_do_results_output', 'iri_inline_scripts', 25 );
+add_action( 'iri_after', 'iri_after_wrapper', 15 );

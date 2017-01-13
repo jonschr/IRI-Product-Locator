@@ -176,7 +176,7 @@ function iri_inline_scripts( $atts ) {
                                             iw.close();
                                             infoWindowVisible(false);
                                         } else {
-                                            var html= "<div class='marker-info'><h4>"+storeName+"</h4><p><span class='address'>"+storeAddress+"</span><span class='city'>"+storeCity+"</span><span class='phone'>"+storePhone+"</span><span class='distance'>"+storeDistance+"</span></p></div>";
+                                            var html= "<div class='marker-info'><h4>"+storeName+"</h4><p><span class='address'>"+storeAddress+"</span><span class='city'>"+storeCity+"</span><span class='phone'>"+storePhone+"</span><span class='distance'>"+storeDistance+"</span><span class='google-link'><a href='http://maps.google.com/?q="+storeName+storeAddress+storeCity+"' target='_blank'>View on Google</a></span></p></div>";
                                             iw = new google.maps.InfoWindow({content:html});
                                             iw.open(map,marker);
                                             infoWindowVisible(true);

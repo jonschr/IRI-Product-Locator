@@ -11,10 +11,11 @@ $location = (isset($_REQUEST['location']) && '' != $_REQUEST['location']) ? $_RE
 $postalCode = (isset($_REQUEST['zip']) && '' != $_REQUEST['zip']) ? $_REQUEST['zip'] : '';
 $productID = (isset($_REQUEST['upc']) && '' != $_REQUEST['upc']) ? $_REQUEST['upc'] : '';
 
-//* These settings can be controlled through the shortcode
-$radius = (isset($_REQUEST['radius']) && '' != $_REQUEST['radius']) ? $_REQUEST['radius'] : '';
-$brand_id = (isset($_REQUEST['brandid']) && '' != $_REQUEST['brandid']) ? $_REQUEST['brandid'] : 'FRUS';
-$client_id = (isset($_REQUEST['clientid']) && '' != $_REQUEST['clientid']) ? $_REQUEST['clientid'] : '148';
+//* These settings are set on an options page on the backend of the site
+$brand_id = $_REQUEST['brandid'];
+$radius = $_REQUEST['radius'];
+$location = $_REQUEST['location'];
+$client_id = $_REQUEST['clientid'];
 
 if ( '' != $products ) {
 

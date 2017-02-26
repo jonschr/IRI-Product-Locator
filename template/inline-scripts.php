@@ -3,14 +3,22 @@
 function iri_inline_scripts( $atts ) {
 
     //* Figure out our variables (we may need them later)
-    $client_id = $atts[ 'client_id' ];
-    $brand_id = $atts[ 'brand_id' ];
-    $google_maps_api_key = $atts[ 'google_maps_api_key' ];
-    $starting_zip = $atts[ 'starting_zip' ];
-    $map_default_zoom_level = $atts[ 'map_default_zoom_level' ];
-    $all_products_group_to_rename = $atts[ 'all_products_group_to_rename' ];
-    $contact_url = $atts[ 'contact_url' ];
-    $radius = $atts[ 'search_radius' ];
+    // $brand_id = get_field( 'brand_id', 'option' );
+    // $client_id = get_field( 'client_id', 'option' );
+    // $google_maps_api_key = $atts[ 'google_maps_api_key' ];
+    // $starting_zip = $atts[ 'starting_zip' ];
+    // $map_default_zoom_level = $atts[ 'map_default_zoom_level' ];
+    // $all_products_group_to_rename = $atts[ 'all_products_group_to_rename' ];
+    // $contact_url = $atts[ 'contact_url' ];
+    // $radius = $atts[ 'search_radius' ];
+
+    $brand_id = get_field( 'brand_id', 'option' );
+    $client_id = get_field( 'client_id', 'option' );
+    $google_maps_api_key = get_field( 'google_api_key', 'option' );
+    $contact_url = get_field( 'contact_url', 'option' );
+    $radius = get_field( 'search_radius', 'option' );
+    $starting_zip = get_field( 'default_zip_code', 'option' );
+    $map_default_zoom_level = get_field( 'default_zoom_level', 'option' );
 
     ?>
 

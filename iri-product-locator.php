@@ -27,6 +27,9 @@ if ( !defined( 'ABSPATH' ) ) {
 // Plugin directory
 define( 'IRI_LOCATOR', dirname( __FILE__ ) );
 
+//* Include our settings file (this sets up an options page)
+include_once( 'settings.php' );
+
 //* Include our php output files
 include_once( 'template/inline-scripts.php' );
 
@@ -51,13 +54,20 @@ add_action( 'wp_ajax_get_product_list', 'iri_ajax_product_list' );
 add_action( 'wp_ajax_nopriv_get_product_list', 'iri_ajax_product_list' );
 function iri_ajax_product_list () {
 
+    $allow_caching = get_field( 'allow_caching', 'option' );
+    $brand_id = get_field( 'brand_id', 'option' );
+    $client_id = get_field( 'client_id', 'option' );
+    $radius = get_field( 'search_radius', 'option' );
+    $starting_zip = get_field( 'default_zip_code', 'option' );
+    
     //* To reset the cache while testing
-    // set_transient( 'product_list', $product_json, 60 );
+    if ( $allow_caching != 1 )
+        set_transient( 'product_list', $product_json, 60 );
 
     if ( get_transient( 'product_list' ) ) {
         $product_json = get_transient('product_list');
     } else {
-        $product_json = file_get_contents( plugin_dir_url( __FILE__ ) . '/locator-service.php?products=1' );
+        $product_json = file_get_contents( plugin_dir_url( __FILE__ ) . '/locator-service.php?products=1&brandid=' . $brand_id . '&clientid=' . $client_id . '&location=' . $starting_zip . '&radius=' . $radius );
         set_transient( 'product_list', $product_json, 60 * 60 * 24 );
     }
 
@@ -84,13 +94,21 @@ function locator_main_shortcode( $atts ) {
 	), $atts );
 
     //* Variables shown here for readability only; they'll need to be redefined as needed in individual functions
-    $client_id = $atts[ 'client_id' ];
-    $brand_id = $atts[ 'brand_id' ];
-    $google_maps_api_key = $atts[ 'google_maps_api_key' ];
-    $starting_zip = $atts[ 'starting_zip' ];
-    $map_default_zoom_level = $atts[ 'map_default_zoom_level' ];
-    $contact_url = $atts[ 'contact_url' ];
-    $radius = $atts[ 'search_radius' ];
+    $brand_id = get_field( 'brand_id', 'option' );
+    $client_id = get_field( 'client_id', 'option' );
+    $allow_caching = get_field( 'allow_caching', 'option' );
+    $google_maps_api_key = get_field( 'google_api_key', 'option' );
+    $contact_url = get_field( 'contact_url', 'option' );
+    $radius = get_field( 'search_radius', 'option' );
+    $starting_zip = get_field( 'default_zip_code', 'option' );
+    $zoom_level = get_field( 'default_zoom_level', 'option' );
+
+
+    // $google_maps_api_key = $atts[ 'google_maps_api_key' ];
+    // $starting_zip = $atts[ 'starting_zip' ];
+    // $map_default_zoom_level = $atts[ 'map_default_zoom_level' ];
+    // $contact_url = $atts[ 'contact_url' ];
+    // $radius = $atts[ 'search_radius' ];
 
     ob_start();
 

@@ -55,7 +55,7 @@ function iri_locations_list() {
 function iri_map_output( $atts ) {
 
     //* We'll need our Google Maps API key here
-    $google_maps_api_key = $atts[ 'google_maps_api_key' ];
+    $google_maps_api_key = get_field( 'google_api_key', 'option' );
 
     //* Connect with Google Maps using our api key
     printf( '<script src="https://maps.googleapis.com/maps/api/js?key=%s&extension=.js"></script>', $google_maps_api_key );

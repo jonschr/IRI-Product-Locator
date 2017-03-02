@@ -14,40 +14,60 @@ $productID = (isset($_REQUEST['upc']) && '' != $_REQUEST['upc']) ? $_REQUEST['up
 //* These settings are set on an options page on the backend of the site
 $brand_id = $_REQUEST['brandid'];
 $radius = $_REQUEST['radius'];
-$location = $_REQUEST['location'];
+// $location = $_REQUEST['location'];
 $client_id = $_REQUEST['clientid'];
 
+//* If there are products...
 if ( '' != $products ) {
 
+    ////////////////////////////////
+    // GETTING THE PRODUCT GROUPS //
+    ////////////////////////////////
+    
 	//* Grab the list of groups
 	$xmlString = file_get_contents("http://productlocator.infores.com/productlocator/products/products.pli?client_id=$client_id&brand_id=$brand_id&prod_lvl=group");
 
 	$xml = new SimpleXMLElement($xmlString);
 
-    $number_of_groups = count( $xml );
-    $count_groups = 1;
-
 	// add groups
 	$groupArray = array();
 
+	//* Check the total number of groups (if there's 1, it should be named "All Products")
+	$number_of_groups = count( $xml );
+
 	foreach ($xml as $group) {
 
+
+		//* Remove the word "Group" from the names of things
+		$groupname = str_replace( 'Group ', '', $group->group_name );
+
+		if ( $number_of_groups == 1 )
+			$groupname = 'All Products';
+
+		// echo 'GROUP NUMBER ' . $current_group_number . ': ' . $groupname  . '  //  ';
+
         //* If we have more than one group, we'll treat this normally
-        if ( $number_of_groups != 1 )
-            $groupArray[strval($group->group_id)] = '{"GROUP_' . $group->group_id . '": "' . $group->group_name . '"}';
+        // if ( $current_group_number != 1 )
+            // $groupArray[strval($group->group_id)] = '{"GROUP_ID": "GROUPNAME"}';
 
-        //* If there's just one, then it's an "all products" group, so let's make it say that
-        if ( ( $number_of_groups == $count_groups ) && ( $number_of_groups == 1 ) )
-            $groupArray[strval($group->group_id)] = '{"GROUP_' . $group->group_id . '": "All Products"}';
+            $groupArray[strval($group->group_id)] = '{"GROUP_' . $group->group_id . '": "' . $groupname . '"}';
 
-        $count_groups++;
+        //* The first group will always be an "All Products" group, so let's make it say that
+        // if ( $current_group_number == 1 )
+            // $groupArray[strval($group->group_id)] = '{"GROUP_' . $group->group_id . '": "All Products"}';
+
 	}
 
-    //* If there's just one group, we'll use it, if more than one, then we skip the first group (the 'all products' group)
+    /////////////////////////////////
+    // GETTING INDIVIDUAL PRODUCTS //
+    /////////////////////////////////
 
 	$prodArray = array();
 	foreach ($groupArray as $group_id => $group) {
+		
 		$prodArray[$group_id] = $group;
+
+		// echo 'GROUP ID: ' . $group_id . '   //   ';
 
 		// if ($group_id == 'any_frusion')
         // continue; // don't need to add all the products for this group
@@ -58,31 +78,53 @@ if ( '' != $products ) {
 		// grab list of products and return it to the screen as json array
 		$xmlString = file_get_contents("http://productlocator.infores.com/productlocator/products/products.pli?client_id=$client_id&brand_id=$brand_id&group_id=$group_id");
 
-
 		$xml = new SimpleXMLElement($xmlString);
+
 
 		// add products
 		foreach ($xml as $products) {
 
+			// BREAK if there's a message indicating an error
+			// if ( $products->message )
+			// 	break;
+
+			// echo 'PRODUCT:';
+			// print_r( $products );
+
             // if ( ( $number_of_groups == $count ) && ( $number_of_groups == 1 ) )
             //     $products->upc_code = 'All Products';
+            //  
+            
+            
+			$subitem_prefix = '';
 
-			$prodArray[$group_id . strval($products->upc_code)] = '{"' . $products->upc_code . '": "' . $products->upc_name . '"}';
+            if ( $number_of_groups != 1 )
+	            $subitem_prefix = '&nbsp;&nbsp;&nbsp;&nbsp;';
+
+			if ( $products->upc_code )
+				$prodArray[$group_id . strval($products->upc_code)] = '{"' . $products->upc_code . '": "' . $subitem_prefix . $products->upc_name . '"}';
 		}
+			
+
 	}
 
     echo '[' . implode(',', $prodArray) . ']';
+
+    // echo 'ENDING THE PRODUCT LOOP';
+
     exit();
 }
 
+
 if ( '' != $location ) {
-    // echo 'http://productlocator.infores.com/productlocator/servlet/ProductLocatorEngine?clientid=$client_id&productfamilyid=$brand_id&searchradius=' . $radius . '&producttype=upc&productid=' . $productID . '&zip=' . $postalCode;
 
 	$is_group = false;
 	if (strpos($productID, 'GROUP_') !== false) {
 		$is_group = true;
 		$productID = str_replace('GROUP_', '', $productID);
 	}
+
+	$productID = rawurlencode( $productID );
 
 	$svc_url = sprintf("http://productlocator.infores.com/productlocator/servlet/ProductLocatorEngine?clientid=$client_id&productfamilyid=$brand_id&searchradius=%s&producttype=%s&productid=%s&zip=%s",
 		$radius, $is_group ? 'agg' : 'upc', $productID, $postalCode);

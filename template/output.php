@@ -6,6 +6,7 @@ function iri_before_wrapper() {
 
 //* Outputs the actual form
 function iri_form_output( $atts ) {
+    $starting_zip = get_field( 'default_zip_code', 'option' );
     ?>
     <form id="locator-form" class="locator-form" role="form">
 
@@ -13,7 +14,7 @@ function iri_form_output( $atts ) {
             <!-- <label for="postalCode"><?php // _e('Zip Code', 'iri-locator'); ?></label> -->
             <span class="error zip required" hidden="">- Please enter a zip code.</span>
             <span class="error zip invalid" hidden="">- Please enter a 5-digit zip code.</span>
-            <input type="text" class="locator-form-input" id="postalCode" placeholder="<?php _e('Zip Code', 'iri-locator'); ?>" maxlength="5">
+            <input type="text" class="locator-form-input" id="postalCode" value="<?php echo $starting_zip; ?>" placeholder="<?php _e('Zip Code', 'iri-locator'); ?>" maxlength="5">
         </div>
 
         <div class="form-group product-selection">
